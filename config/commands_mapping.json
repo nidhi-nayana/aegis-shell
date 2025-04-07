@@ -1,0 +1,381 @@
+{
+    "curl": {
+        "language": "system",
+        "install_cmd": "winget install curl"
+    },
+    "wget": {
+        "language": "system",
+        "install_cmd": "winget install wget"
+    },
+    "ffmpeg": {
+        "language": "system",
+        "install_cmd": "winget install Gyan.FFmpeg"
+    },
+    "git": {
+        "language": "system",
+        "install_cmd": "winget install git.git"
+    },
+    "node": {
+        "language": "javascript",
+        "install_cmd": "winget install OpenJS.NodeJS"
+    },
+    "npm": {
+        "language": "javascript",
+        "install_cmd": "winget install OpenJS.NodeJS"
+    },
+    "npx": {
+        "language": "javascript",
+        "install_cmd": "winget install OpenJS.NodeJS"
+    },
+    "python": {
+        "language": "python",
+        "install_cmd": "winget install Python.Python.3.12"
+    },
+    "pip": {
+        "language": "python",
+        "install_cmd": "winget install Python.Python.3.12"
+    },
+    "pipenv": {
+        "language": "python",
+        "install_cmd": "pip install pipenv"
+    },
+    "virtualenv": {
+        "language": "python",
+        "install_cmd": "pip install virtualenv"
+    },
+    "flask": {
+        "language": "python",
+        "install_cmd": "pip install flask"
+    },
+    "django": {
+        "language": "python",
+        "install_cmd": "pip install django"
+    },
+    "numpy": {
+        "language": "python",
+        "install_cmd": "pip install numpy"
+    },
+    "pandas": {
+        "language": "python",
+        "install_cmd": "pip install pandas"
+    },
+    "matplotlib": {
+        "language": "python",
+        "install_cmd": "pip install matplotlib"
+    },
+    "seaborn": {
+        "language": "python",
+        "install_cmd": "pip install seaborn"
+    },
+    "scikit-learn": {
+        "language": "python",
+        "install_cmd": "pip install scikit-learn"
+    },
+    "tensorflow": {
+        "language": "python",
+        "install_cmd": "pip install tensorflow"
+    },
+    "torch": {
+        "language": "python",
+        "install_cmd": "pip install torch"
+    },
+    "opencv": {
+        "language": "multi",
+        "options": {
+            "python": "pip install opencv-python",
+            "javascript": "npm install opencv4nodejs"
+        }
+    },
+    "express": {
+        "language": "javascript",
+        "install_cmd": "npm install express"
+    },
+    "react": {
+        "language": "javascript",
+        "install_cmd": "npm install react"
+    },
+    "vue": {
+        "language": "javascript",
+        "install_cmd": "npm install vue"
+    },
+    "angular": {
+        "language": "javascript",
+        "install_cmd": "npm install @angular/core"
+    },
+    "next": {
+        "language": "javascript",
+        "install_cmd": "npm install next"
+    },
+    "vite": {
+        "language": "javascript",
+        "install_cmd": "npm install vite"
+    },
+    "axios": {
+        "language": "javascript",
+        "install_cmd": "npm install axios"
+    },
+    "nodemon": {
+        "language": "javascript",
+        "install_cmd": "npm install -g nodemon"
+    },
+    "pm2": {
+        "language": "javascript",
+        "install_cmd": "npm install -g pm2"
+    },
+    "eslint": {
+        "language": "javascript",
+        "install_cmd": "npm install eslint"
+    },
+    "prettier": {
+        "language": "javascript",
+        "install_cmd": "npm install prettier"
+    },
+    "typescript": {
+        "language": "javascript",
+        "install_cmd": "npm install typescript"
+    },
+    "ts-node": {
+        "language": "javascript",
+        "install_cmd": "npm install -g ts-node"
+    },
+    "webpack": {
+        "language": "javascript",
+        "install_cmd": "npm install webpack"
+    },
+    "babel": {
+        "language": "javascript",
+        "install_cmd": "npm install @babel/core"
+    },
+    "http-server": {
+        "language": "javascript",
+        "install_cmd": "npm install -g http-server"
+    },
+    "create-react-app": {
+        "language": "javascript",
+        "install_cmd": "npm install -g create-react-app"
+    },
+    "dotenv": {
+        "language": "javascript",
+        "install_cmd": "npm install dotenv"
+    },
+    "mongoose": {
+        "language": "javascript",
+        "install_cmd": "npm install mongoose"
+    },
+    "mysql": {
+        "language": "system",
+        "install_cmd": "winget install MySQL.MySQLServer"
+    },
+    "psql": {
+        "language": "system",
+        "install_cmd": "winget install PostgreSQL.PostgreSQL"
+    },
+    "sqlite3": {
+        "language": "system",
+        "install_cmd": "winget install SQLite.sqlite"
+    },
+    "docker": {
+        "language": "system",
+        "install_cmd": "winget install Docker.DockerDesktop"
+    },
+    "kubectl": {
+        "language": "system",
+        "install_cmd": "winget install Kubernetes.kubectl"
+    },
+    "helm": {
+        "language": "system",
+        "install_cmd": "winget install Helm.Helm"
+    },
+    "minikube": {
+        "language": "system",
+        "install_cmd": "winget install Kubernetes.minikube"
+    },
+    "aws": {
+        "language": "system",
+        "install_cmd": "winget install Amazon.AWSCLI"
+    },
+    "azure": {
+        "language": "system",
+        "install_cmd": "winget install Microsoft.AzureCLI"
+    },
+    "gcloud": {
+        "language": "system",
+        "install_cmd": "winget install Google.CloudSDK"
+    },
+    "terraform": {
+        "language": "system",
+        "install_cmd": "winget install Hashicorp.Terraform"
+    },
+    "ansible": {
+        "language": "system",
+        "install_cmd": "pip install ansible"
+    },
+    "vagrant": {
+        "language": "system",
+        "install_cmd": "winget install HashiCorp.Vagrant"
+    },
+    "nmap": {
+        "language": "system",
+        "install_cmd": "winget install Nmap.Nmap"
+    },
+    "wireshark": {
+        "language": "system",
+        "install_cmd": "winget install WiresharkFoundation.Wireshark"
+    },
+    "postman": {
+        "language": "system",
+        "install_cmd": "winget install Postman.Postman"
+    },
+    "insomnia": {
+        "language": "system",
+        "install_cmd": "winget install Insomnia.Insomnia"
+    },
+    "jupyter": {
+        "language": "python",
+        "install_cmd": "pip install notebook"
+    },
+    "pyqt5": {
+        "language": "python",
+        "install_cmd": "pip install pyqt5"
+    },
+    "tkinter": {
+        "language": "python",
+        "install_cmd": "pip install tk"
+    },
+    "pillow": {
+        "language": "python",
+        "install_cmd": "pip install pillow"
+    },
+    "beautifulsoup4": {
+        "language": "python",
+        "install_cmd": "pip install beautifulsoup4"
+    },
+    "requests": {
+        "language": "python",
+        "install_cmd": "pip install requests"
+    },
+    "httpx": {
+        "language": "python",
+        "install_cmd": "pip install httpx"
+    },
+    "selenium": {
+        "language": "python",
+        "install_cmd": "pip install selenium"
+    },
+    "scrapy": {
+        "language": "python",
+        "install_cmd": "pip install scrapy"
+    },
+    "pytest": {
+        "language": "python",
+        "install_cmd": "pip install pytest"
+    },
+    "black": {
+        "language": "python",
+        "install_cmd": "pip install black"
+    },
+    "pylint": {
+        "language": "python",
+        "install_cmd": "pip install pylint"
+    },
+    "autopep8": {
+        "language": "python",
+        "install_cmd": "pip install autopep8"
+    },
+    "openai": {
+        "language": "python",
+        "install_cmd": "pip install openai"
+    },
+    "pydantic": {
+        "language": "python",
+        "install_cmd": "pip install pydantic"
+    },
+    "fastapi": {
+        "language": "python",
+        "install_cmd": "pip install fastapi"
+    },
+    "uvicorn": {
+        "language": "python",
+        "install_cmd": "pip install uvicorn"
+    },
+    "sqlalchemy": {
+        "language": "python",
+        "install_cmd": "pip install sqlalchemy"
+    },
+    "faker": {
+        "language": "python",
+        "install_cmd": "pip install faker"
+    },
+    "gunicorn": {
+        "language": "python",
+        "install_cmd": "pip install gunicorn"
+    },
+    "notebook": {
+        "language": "python",
+        "install_cmd": "pip install notebook"
+    },
+    "markdown": {
+        "language": "python",
+        "install_cmd": "pip install markdown"
+    },
+    "tqdm": {
+        "language": "python",
+        "install_cmd": "pip install tqdm"
+    },
+    "colorama": {
+        "language": "python",
+        "install_cmd": "pip install colorama"
+    },
+    "rich": {
+        "language": "python",
+        "install_cmd": "pip install rich"
+    },
+    "pyinstaller": {
+        "language": "python",
+        "install_cmd": "pip install pyinstaller"
+    },
+    "pygments": {
+        "language": "python",
+        "install_cmd": "pip install pygments"
+    },
+    "tabulate": {
+        "language": "python",
+        "install_cmd": "pip install tabulate"
+    },
+    "requests-html": {
+        "language": "python",
+        "install_cmd": "pip install requests-html"
+    },
+    "pypdf2": {
+        "language": "python",
+        "install_cmd": "pip install PyPDF2"
+    },
+    "docx": {
+        "language": "python",
+        "install_cmd": "pip install python-docx"
+    },
+    "xlrd": {
+        "language": "python",
+        "install_cmd": "pip install xlrd"
+    },
+    "openpyxl": {
+        "language": "python",
+        "install_cmd": "pip install openpyxl"
+    },
+    "schedule": {
+        "language": "python",
+        "install_cmd": "pip install schedule"
+    },
+    "keyboard": {
+        "language": "python",
+        "install_cmd": "pip install keyboard"
+    },
+    "pyautogui": {
+        "language": "python",
+        "install_cmd": "pip install pyautogui"
+    },
+    "pyttsx3": {
+        "language": "python",
+        "install_cmd": "pip install pyttsx3"
+    }
+}
