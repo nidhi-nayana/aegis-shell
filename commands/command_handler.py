@@ -1,34 +1,71 @@
 import os
 import subprocess
 import json
+import sys
+import importlib
+import shutil
 from colorama import Fore, Style
-from utils.installers import simulate_installation, run_installer
+
+# Add the parent directory to sys.path to enable relative imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from utils.installers import install_package, is_python_package_installed
 from llm.llm_handler import handle_unknown_command
 from config_loader import load_command_mappings, save_command_mappings
 
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-def is_installed(command):
+def is_command_installed(command):
     """Check if a command exists in the system path."""
-    return subprocess.call(['where' if os.name == 'nt' else 'which', command],
-                           stdout=subprocess.DEVNULL,
-                           stderr=subprocess.DEVNULL) == 0
+    # First check if it's available directly as a command
+    try:
+        if shutil.which(command) is not None:
+            return True
+    except Exception:
+        pass
+    
+    # Then try using system-specific commands
+    try:
+        return subprocess.call(['where' if os.name == 'nt' else 'which', command],
+                              stdout=subprocess.DEVNULL,
+                              stderr=subprocess.DEVNULL) == 0
+    except Exception:
+        return False
+
+def is_package_installed(package_name, language="system"):
+    """Check if a package is installed based on language."""
+    if language == "python":
+        return is_python_package_installed(package_name)
+    elif language == "javascript":
+        # Check if it's a global npm package
+        try:
+            result = subprocess.run(['npm', 'list', '-g', package_name], 
+                                   stdout=subprocess.PIPE, 
+                                   stderr=subprocess.PIPE,
+                                   text=True)
+            return package_name in result.stdout
+        except Exception:
+            return False
+    else:
+        return is_command_installed(package_name)
 
 def handle_command(command, mappings, config):
     """Handle the entered command by checking if it exists and offering installation options."""
+    print(f"DEBUG: Checking command: '{command}'")
+    print(f"DEBUG: Available mappings: {list(mappings.keys())}")
     
-    # 1. Already installed
-    if is_installed(command):
-        print(Fore.GREEN + f"[Aegis] Command '{command}' exists ✅")
-        return
-
-    # 2. Found in known mappings
-    if command in mappings:
+    # Check if it's in our mappings
+    is_in_mappings = command in mappings
+    if is_in_mappings:
         info = mappings[command]
+        print(f"DEBUG: Found mapping for '{command}': {info}")
+        language = info.get("language", "system")
+        
+        # Check if already installed
+        if is_package_installed(command, language):
+            print(Fore.GREEN + f"[Aegis] '{command}' is already installed ✅")
+            return
         
         # Handle multi-language packages
-        if "language" in info and info["language"] == "multi" and "options" in info:
+        if language == "multi" and "options" in info:
             options = info["options"]
             print(Fore.YELLOW + f"[Aegis] Found multiple options for '{command}':")
             for i, (env, cmd) in enumerate(options.items(), 1):
@@ -41,7 +78,7 @@ def handle_command(command, mappings, config):
                 install_cmd = options[chosen_env]
                 installer, package = parse_install_command(install_cmd)
                 if installer and package:
-                    simulate_installation(package, installer)
+                    install_package(package, installer)
             except (ValueError, IndexError):
                 print(Fore.RED + "[Aegis] Invalid selection.")
             return
@@ -51,13 +88,18 @@ def handle_command(command, mappings, config):
             install_cmd = info["install_cmd"]
             installer, package = parse_install_command(install_cmd)
             
-            print(Fore.YELLOW + f"[Aegis] '{command}' not found. Suggested: {install_cmd}")
-            confirm = input("Do you want to simulate installation? [y/N]: ").strip().lower()
+            print(Fore.YELLOW + f"[Aegis] '{command}' not found on your system. Installation command: {install_cmd}")
+            confirm = input("Do you want to install it? [y/N]: ").strip().lower()
             if confirm == "y":
-                simulate_installation(package, installer)
+                install_package(package, installer)
             return
-
-    # 3. Unknown command → AI fallback
+    
+    # If command is not in mappings, check if it's installed anyway
+    if is_command_installed(command):
+        print(Fore.GREEN + f"[Aegis] Command '{command}' exists ✅")
+        return
+    
+    # Unknown command → AI fallback
     print(Fore.YELLOW + f"[Aegis] Unknown command: '{command}'")
     confirm = input("[Aegis] Would you like me to ask the AI for help? [y/N]: ").strip().lower()
     if confirm != "y":
@@ -74,14 +116,15 @@ def handle_command(command, mappings, config):
             if confirm2 == "y":
                 installer, pkg = parse_install_command(install_command)
                 if installer and pkg:
-                    simulate_installation(pkg, installer)
-                    # Update mapping with the new command
-                    mappings[command] = {
-                        "language": "system",
-                        "install_cmd": install_command
-                    }
-                    save_command_mappings(mappings)
-                    print(Fore.GREEN + f"[Aegis] Added '{command}' to known commands.")
+                    success = install_package(pkg, installer)
+                    if success:
+                        # Update mapping with the new command
+                        mappings[command] = {
+                            "language": "system" if installer != "pip" else "python",
+                            "install_cmd": install_command
+                        }
+                        save_command_mappings(mappings)
+                        print(Fore.GREEN + f"[Aegis] Added '{command}' to known commands.")
                 else:
                     print(Fore.RED + "[Aegis] Could not parse install command.")
         else:
@@ -98,5 +141,6 @@ def parse_install_command(command_str):
         elif len(parts) == 2:  # For formats like "apt python3"
             return parts[0], parts[1]
         return None, None
-    except Exception:
+    except Exception as e:
+        print(f"Error parsing install command: {e}")
         return None, None

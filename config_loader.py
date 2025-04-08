@@ -1,14 +1,25 @@
 import json
 import os
+import sys
+from pathlib import Path
 
-COMMAND_MAPPINGS_FILE = "config/command_mapping.json"
-CONFIG_FILE = "config/config.json"
+# Get the base directory for the project
+BASE_DIR = Path(__file__).resolve().parent
+
+# Use proper path joining to ensure cross-platform compatibility
+COMMAND_MAPPINGS_FILE = os.path.join(BASE_DIR, "config", "commands_mapping.json")
+CONFIG_FILE = os.path.join(BASE_DIR, "config", "config.json")
 
 def load_command_mappings():
-    if not os.path.exists(COMMAND_MAPPINGS_FILE):
+    try:
+        if not os.path.exists(COMMAND_MAPPINGS_FILE):
+            print(f"Warning: Command mappings file not found at {COMMAND_MAPPINGS_FILE}")
+            return {}
+        with open(COMMAND_MAPPINGS_FILE, "r") as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading command mappings: {e}")
         return {}
-    with open(COMMAND_MAPPINGS_FILE, "r") as f:
-        return json.load(f)
 
 def save_command_mappings(mappings):
     with open(COMMAND_MAPPINGS_FILE, "w") as f:

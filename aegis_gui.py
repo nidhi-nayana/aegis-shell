@@ -4,9 +4,13 @@ from colorama import init
 import threading
 import os
 import sys
+import queue
+
+# Ensure current directory is in path
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 from commands.command_handler import handle_command
-from config.config_loader import load_command_mappings, load_config
+from config_loader import load_command_mappings, load_config
 from utils.permissions import check_admin_rights
 
 init(autoreset=True)
@@ -42,6 +46,7 @@ class AegisShellGUI:
         self.output_area.config(state=tk.DISABLED)
         self.output_area.tag_config("prompt", foreground=self.prompt_color)
         self.output_area.tag_config("output", foreground=self.fg_color)
+        self.output_area.tag_config("error", foreground="#ff5555")
 
         # Input field
         self.command_entry = tk.Entry(
@@ -59,7 +64,13 @@ class AegisShellGUI:
         self.command_entry.bind("<Return>", self.run_command)
         self.command_entry.focus()
 
-        self.mappings = load_command_mappings()
+        try:
+            self.mappings = load_command_mappings()
+            self.print_output(f"DEBUG: Loaded {len(self.mappings)} command mappings")
+        except Exception as e:
+            self.print_output(f"Error loading mappings: {str(e)}", "error")
+            self.mappings = {}
+            
         self.config = load_config()
 
         if not check_admin_rights():
@@ -90,11 +101,76 @@ class AegisShellGUI:
         sys.stdout = mystdout = io.StringIO()
 
         try:
+            # For GUI, we need to handle user input differently
+            # Store the original input function
+            original_input = __builtins__.input
+            
+            # Create a queue for GUI responses
+            self.input_queue = queue.Queue()
+            
+            # Override input to handle GUI input
+            def gui_input(prompt):
+                self.print_output(prompt, "prompt")
+                
+                # Create a dialog for input
+                dialog = tk.Toplevel(self.root)
+                dialog.title("Input Required")
+                dialog.geometry("400x150")
+                dialog.configure(bg=self.bg_color)
+                
+                # Add prompt text
+                prompt_label = tk.Label(dialog, text=prompt, bg=self.bg_color, fg="white", wraplength=380)
+                prompt_label.pack(pady=10)
+                
+                # Add input field
+                input_var = tk.StringVar()
+                input_entry = tk.Entry(dialog, textvariable=input_var, width=30, bg="#111", fg="white")
+                input_entry.pack(pady=10)
+                input_entry.focus_set()
+                
+                # Add buttons
+                button_frame = tk.Frame(dialog, bg=self.bg_color)
+                button_frame.pack(pady=10)
+                
+                def on_ok():
+                    self.input_queue.put(input_var.get())
+                    dialog.destroy()
+                    
+                def on_cancel():
+                    self.input_queue.put("n")  # Default to "no"
+                    dialog.destroy()
+                    
+                ok_button = tk.Button(button_frame, text="OK", command=on_ok, bg="#1e1e1e", fg="white")
+                ok_button.pack(side=tk.LEFT, padx=10)
+                
+                cancel_button = tk.Button(button_frame, text="Cancel", command=on_cancel, bg="#1e1e1e", fg="white")
+                cancel_button.pack(side=tk.LEFT, padx=10)
+                
+                # Wait for dialog response
+                dialog.transient(self.root)
+                dialog.grab_set()
+                self.root.wait_window(dialog)
+                
+                # Return user input
+                return self.input_queue.get()
+            
+            # Replace input function
+            __builtins__.input = gui_input
+            
+            # Execute command
             handle_command(command, self.mappings, self.config)
+            
+            # Restore original input function
+            __builtins__.input = original_input
+            
         except Exception as e:
             self.print_output(f"[Aegis ERROR] {str(e)}", "error")
-
-        sys.stdout = old_stdout
+        finally:
+            # Make sure to restore stdout and input
+            sys.stdout = old_stdout
+            if 'original_input' in locals():
+                __builtins__.input = original_input
+                
         output = mystdout.getvalue()
         if output:
             self.print_output(output.strip(), "output")

@@ -19,7 +19,13 @@ def main():
     print(Fore.YELLOW + "[Aegis] Welcome to the ultimate AI-powered terminal shell.")
     print(Fore.YELLOW + "Type 'exit' to quit.\n")
 
-    mappings = load_command_mappings()
+    try:
+        mappings = load_command_mappings()
+        print(f"DEBUG: Loaded {len(mappings)} command mappings")
+    except Exception as e:
+        print(f"Error loading mappings: {e}")
+        mappings = {}
+    
     config = load_config()
     
     # Setup advanced autocomplete using prompt_toolkit
@@ -39,6 +45,8 @@ def main():
             continue
         except EOFError:
             break
+        except Exception as e:
+            print(Fore.RED + f"[Aegis] Error: {e}")
 
 if __name__ == "__main__":
     if not check_admin_rights():
