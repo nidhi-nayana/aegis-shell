@@ -1,7 +1,7 @@
 import json
 import os
 
-COMMAND_MAPPINGS_FILE = "config/command_mappings.json"
+COMMAND_MAPPINGS_FILE = "config/command_mapping.json"
 CONFIG_FILE = "config/config.json"
 
 def load_command_mappings():
