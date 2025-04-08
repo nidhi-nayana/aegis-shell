@@ -47,27 +47,89 @@ def is_package_installed(package_name, language="system"):
     else:
         return is_command_installed(package_name)
 
+def execute_system_command(command):
+    """Execute a system command (cmd or PowerShell) and return the result."""
+    print(Fore.CYAN + f"[Aegis] Executing system command: {command}" + Style.RESET_ALL)
+    
+    try:
+        # First try with cmd.exe for CMD commands
+        if os.name == 'nt':  # For Windows
+            # Detect PowerShell commands (they often contain PowerShell-specific syntax)
+            powershell_indicators = ['Get-', '-Path', 'ForEach-Object', 'Out-File', 
+                                     '|', '$_', '-Filter', 'Select-Object']
+                                     
+            use_powershell = any(indicator in command for indicator in powershell_indicators)
+            
+            if use_powershell:
+                # Execute with PowerShell
+                process = subprocess.Popen(
+                    ['powershell', '-Command', command],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True
+                )
+            else:
+                # Execute with CMD
+                process = subprocess.Popen(
+                    ['cmd', '/c', command],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True
+                )
+        else:  # For Unix-like systems
+            # Use bash
+            process = subprocess.Popen(
+                ['bash', '-c', command],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+        
+        stdout, stderr = process.communicate()
+        if process.returncode == 0:
+            if stdout:
+                print(stdout)
+            print(Fore.GREEN + f"[Aegis] Command executed successfully ✅" + Style.RESET_ALL)
+            return True
+        else:
+            if stderr:
+                print(Fore.RED + stderr + Style.RESET_ALL)
+            print(Fore.RED + f"[Aegis] Command execution failed with return code {process.returncode} ❌" + Style.RESET_ALL)
+            return False
+            
+    except Exception as e:
+        print(Fore.RED + f"[Aegis] Error executing command: {e}" + Style.RESET_ALL)
+        return False
+
 def handle_command(command, mappings, config):
     """Handle the entered command by checking if it exists and offering installation options."""
     print(f"DEBUG: Checking command: '{command}'")
     print(f"DEBUG: Available mappings: {list(mappings.keys())}")
     
+    # Extract the base command (first word) for checking mappings
+    base_command = command.split()[0] if ' ' in command else command
+    
     # Check if it's in our mappings
-    is_in_mappings = command in mappings
+    is_in_mappings = base_command in mappings
     if is_in_mappings:
-        info = mappings[command]
-        print(f"DEBUG: Found mapping for '{command}': {info}")
+        info = mappings[base_command]
+        print(f"DEBUG: Found mapping for '{base_command}': {info}")
         language = info.get("language", "system")
         
         # Check if already installed
-        if is_package_installed(command, language):
-            print(Fore.GREEN + f"[Aegis] '{command}' is already installed ✅")
-            return
+        if is_package_installed(base_command, language):
+            print(Fore.GREEN + f"[Aegis] '{base_command}' is already installed ✅")
+            
+            # If this is a complete command (not just the package name), execute it
+            if base_command != command:
+                return execute_system_command(command)
+                
+            return True
         
         # Handle multi-language packages
         if language == "multi" and "options" in info:
             options = info["options"]
-            print(Fore.YELLOW + f"[Aegis] Found multiple options for '{command}':")
+            print(Fore.YELLOW + f"[Aegis] Found multiple options for '{base_command}':")
             for i, (env, cmd) in enumerate(options.items(), 1):
                 print(f"{i}. {env.capitalize()} (install with {cmd.split()[0]})")
             
@@ -81,29 +143,35 @@ def handle_command(command, mappings, config):
                     install_package(package, installer)
             except (ValueError, IndexError):
                 print(Fore.RED + "[Aegis] Invalid selection.")
-            return
+            return True
         
         # Handle normal packages
         if "install_cmd" in info:
             install_cmd = info["install_cmd"]
             installer, package = parse_install_command(install_cmd)
             
-            print(Fore.YELLOW + f"[Aegis] '{command}' not found on your system. Installation command: {install_cmd}")
+            print(Fore.YELLOW + f"[Aegis] '{base_command}' not found on your system. Installation command: {install_cmd}")
             confirm = input("Do you want to install it? [y/N]: ").strip().lower()
             if confirm == "y":
                 install_package(package, installer)
-            return
+            return True
     
-    # If command is not in mappings, check if it's installed anyway
-    if is_command_installed(command):
-        print(Fore.GREEN + f"[Aegis] Command '{command}' exists ✅")
-        return
+    # If command is not in mappings, check if it's installed or try to execute it directly
+    if is_command_installed(base_command):
+        print(Fore.GREEN + f"[Aegis] Command '{base_command}' exists ✅")
+        # Execute the full command directly
+        return execute_system_command(command)
+    
+    # Try executing as a system command anyway (might be a built-in cmd/PowerShell command)
+    print(Fore.YELLOW + f"[Aegis] Attempting to run '{command}' as a system command...")
+    if execute_system_command(command):
+        return True
     
     # Unknown command → AI fallback
     print(Fore.YELLOW + f"[Aegis] Unknown command: '{command}'")
     confirm = input("[Aegis] Would you like me to ask the AI for help? [y/N]: ").strip().lower()
     if confirm != "y":
-        return
+        return False
 
     suggestion, install_command = handle_unknown_command(command)
 
@@ -119,18 +187,20 @@ def handle_command(command, mappings, config):
                     success = install_package(pkg, installer)
                     if success:
                         # Update mapping with the new command
-                        mappings[command] = {
+                        mappings[base_command] = {
                             "language": "system" if installer != "pip" else "python",
                             "install_cmd": install_command
                         }
                         save_command_mappings(mappings)
-                        print(Fore.GREEN + f"[Aegis] Added '{command}' to known commands.")
+                        print(Fore.GREEN + f"[Aegis] Added '{base_command}' to known commands.")
                 else:
                     print(Fore.RED + "[Aegis] Could not parse install command.")
         else:
             print(Fore.RED + "[Aegis] Could not determine installation method.")
     else:
         print(Fore.RED + "[Aegis] AI could not help with this command.")
+    
+    return False
 
 def parse_install_command(command_str):
     """Parses installation commands like 'pip install xyz' or 'npm install abc'"""

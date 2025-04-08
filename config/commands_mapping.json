@@ -82,5 +82,9 @@
     "pipreqs": {
         "language": "python",
         "install_cmd": "pip install pipreqs"
+    },
+    "pyshorteners": {
+        "language": "python",
+        "install_cmd": "pip install pyshorteners"
     }
 }
