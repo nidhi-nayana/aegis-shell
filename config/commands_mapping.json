@@ -86,5 +86,20 @@
     "pyshorteners": {
         "language": "python",
         "install_cmd": "pip install pyshorteners"
+    },
+    "maven": {
+        "language": "system",
+        "install_cmd": "winget install Apache.Maven"
+    },
+    "mvn": {
+        "language": "system",
+        "install_cmd": "winget install Apache.Maven"
+    },
+    "apt": {
+        "language": "multi",
+        "options": {
+            "windows": "winget install apt-tools",
+            "linux": "This is typically pre-installed on Debian/Ubuntu systems"
+        }
     }
 }

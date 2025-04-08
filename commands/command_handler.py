@@ -109,6 +109,25 @@ def handle_command(command, mappings, config):
     # Extract the base command (first word) for checking mappings
     base_command = command.split()[0] if ' ' in command else command
     
+    # Special case handlers for common development tools
+    if base_command == "mvn" or base_command == "maven":
+        print(Fore.YELLOW + "[Aegis] Maven commands detected.")
+        if not is_command_installed("mvn"):
+            print(Fore.YELLOW + "[Aegis] Maven not found on your system.")
+            confirm = input("[Aegis] Would you like to install Maven? [y/N]: ").strip().lower()
+            if confirm == "y":
+                # Use platform-specific installation
+                if os.name == "nt":  # Windows
+                    install_package("Apache.Maven", "winget")
+                else:  # Unix-like
+                    if is_command_installed("apt"):
+                        install_package("maven", "apt")
+                    elif is_command_installed("brew"):
+                        install_package("maven", "brew")
+                    else:
+                        print(Fore.YELLOW + "[Aegis] Please install Maven manually from https://maven.apache.org/download.cgi")
+            return True
+    
     # Check if it's in our mappings
     is_in_mappings = base_command in mappings
     if is_in_mappings:
@@ -153,7 +172,12 @@ def handle_command(command, mappings, config):
             print(Fore.YELLOW + f"[Aegis] '{base_command}' not found on your system. Installation command: {install_cmd}")
             confirm = input("Do you want to install it? [y/N]: ").strip().lower()
             if confirm == "y":
-                install_package(package, installer)
+                success = install_package(package, installer)
+                if success:
+                    # If this was a full command (not just package name), execute it after installation
+                    if base_command != command:
+                        print(Fore.GREEN + "[Aegis] Installation successful. Now executing your original command.")
+                        return execute_system_command(command)
             return True
     
     # If command is not in mappings, check if it's installed or try to execute it directly
@@ -165,6 +189,28 @@ def handle_command(command, mappings, config):
     # Try executing as a system command anyway (might be a built-in cmd/PowerShell command)
     print(Fore.YELLOW + f"[Aegis] Attempting to run '{command}' as a system command...")
     if execute_system_command(command):
+        return True
+    
+    # Handle special case for apt/apt-get (common confusion on Windows)
+    if base_command in ["apt", "apt-get"] and os.name == "nt":
+        print(Fore.YELLOW + "[Aegis] 'apt' is a Linux package manager and isn't available on Windows.")
+        print(Fore.YELLOW + "[Aegis] On Windows, you can use alternatives like:")
+        print("1. winget - Windows Package Manager")
+        print("2. chocolatey - A package manager for Windows")
+        
+        choice = input("[Aegis] Would you like to install one of these? (1/2/N): ").strip().lower()
+        if choice == "1":
+            print(Fore.YELLOW + "[Aegis] Checking if winget is available...")
+            if not is_command_installed("winget"):
+                print(Fore.YELLOW + "[Aegis] winget requires Windows 10 1809 or later.")
+                print(Fore.YELLOW + "[Aegis] Please update the App Installer from the Microsoft Store.")
+            else:
+                print(Fore.GREEN + "[Aegis] winget is already installed.")
+        elif choice == "2":
+            print(Fore.YELLOW + "[Aegis] Installing Chocolatey...")
+            # Chocolatey needs PowerShell admin
+            print(Fore.YELLOW + "[Aegis] Please run PowerShell as Administrator and execute:")
+            print(Fore.WHITE + "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))")
         return True
     
     # Unknown command → AI fallback
@@ -180,10 +226,10 @@ def handle_command(command, mappings, config):
         print(Fore.WHITE + suggestion)
         
         if install_command:
-            confirm2 = input(Fore.YELLOW + "Do you want to install this? [y/N]: ").strip().lower()
-            if confirm2 == "y":
-                installer, pkg = parse_install_command(install_command)
-                if installer and pkg:
+            installer, pkg = parse_install_command(install_command)
+            if installer and pkg:
+                confirm2 = input(Fore.YELLOW + "Do you want to install this? [y/N]: ").strip().lower()
+                if confirm2 == "y":
                     success = install_package(pkg, installer)
                     if success:
                         # Update mapping with the new command
@@ -193,6 +239,11 @@ def handle_command(command, mappings, config):
                         }
                         save_command_mappings(mappings)
                         print(Fore.GREEN + f"[Aegis] Added '{base_command}' to known commands.")
+                        
+                        # If this was a full command (not just installing), run it now
+                        if base_command != command:
+                            print(Fore.GREEN + "[Aegis] Now executing your original command.")
+                            return execute_system_command(command)
                 else:
                     print(Fore.RED + "[Aegis] Could not parse install command.")
         else:
