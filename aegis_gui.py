@@ -6,6 +6,8 @@ import os
 import sys
 import queue
 
+from utils.gui_download_support import redirect_stdout_for_gui, restore_stdout
+
 # Ensure current directory is in path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
@@ -95,10 +97,16 @@ class AegisShellGUI:
 
         threading.Thread(target=self.execute_command, args=(cmd,)).start()
 
+ # Add this to the AegisShellGUI class in aegis_gui.py
+# Make sure to add 'from utils.gui_download_support import redirect_stdout_for_gui, restore_stdout'
+# to the imports at the top
+
     def execute_command(self, command):
         import io
         old_stdout = sys.stdout
-        sys.stdout = mystdout = io.StringIO()
+        
+        # Instead of capturing stdout completely, redirect it to handle progress updates
+        redirect_stdout_for_gui(self.output_area)
 
         try:
             # For GUI, we need to handle user input differently
@@ -167,13 +175,10 @@ class AegisShellGUI:
             self.print_output(f"[Aegis ERROR] {str(e)}", "error")
         finally:
             # Make sure to restore stdout and input
+            restore_stdout()
             sys.stdout = old_stdout
             if 'original_input' in locals():
                 __builtins__.input = original_input
-                
-        output = mystdout.getvalue()
-        if output:
-            self.print_output(output.strip(), "output")
 
 if __name__ == "__main__":
     root = tk.Tk()
