@@ -3,14 +3,14 @@ from colorama import Fore, Style
 import re
 
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
-API_KEY = "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"
+API_KEY = "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"
 
 HEADERS = {
     "Authorization": f"Bearer {API_KEY}",
     "Content-Type": "application/json"
 }
 
-MODEL = "google/gemini-2.0-flash-thinking-exp:free"
+MODEL = "google/gemini-2.0-flash-thinking-exp-1219:free"
 
 def handle_unknown_command(command: str):
     """
@@ -41,9 +41,11 @@ def handle_unknown_command(command: str):
             }
         ]
     }
-
+    
     try:
+        print(Fore.BLUE + f"[Aegis Debug] Sending request to API with model: {MODEL}" + Style.RESET_ALL)
         response = requests.post(API_URL, headers=HEADERS, json=payload)
+        
         if response.status_code == 200:
             reply = response.json()["choices"][0]["message"]["content"].strip()
             
@@ -58,6 +60,7 @@ def handle_unknown_command(command: str):
             return reply, install_cmd
         else:
             print(Fore.RED + f"[Aegis] LLM failed: {response.status_code} {response.reason}" + Style.RESET_ALL)
+            print(Fore.RED + f"Response: {response.text}" + Style.RESET_ALL)
             return None, None
     except Exception as e:
         print(Fore.RED + f"[Aegis] LLM Error: {e}" + Style.RESET_ALL)
